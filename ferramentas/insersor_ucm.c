@@ -96,6 +96,7 @@ int main(int argc, char*argv[])
 	}
 	fecha_mensagens(mensagens, qtdMensagens);
 	salva_arquivo(nomeArquivoUCMNovo, bufferUCM, tamanhoUCM);
+	free(bufferUCM);
 	
 	exit(EXIT_SUCCESS);
 }
