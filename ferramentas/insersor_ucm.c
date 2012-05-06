@@ -328,8 +328,12 @@ static char *marca_fim_de_mensagem(char *mensagem)
 		comprimento_mensagem--;
 	}
 
+	// Termina com %¥ ?
 	if (comprimento_mensagem >= 2 && mensagem[comprimento_mensagem-2] == 0x25 && mensagem[comprimento_mensagem-1] == 0x5C)
-		msg = mensagem; // Nada a se fazer
+		msg = mensagem; // Já com fim-de-mensagem. Nada a se fazer
+	// Termina com %* ?
+	else if (comprimento_mensagem >= 2 && mensagem[comprimento_mensagem-2] == 0x25 && mensagem[comprimento_mensagem-1] == 0x2A)
+		msg = mensagem; // Termina com pergunta YES-NO. Nada a se fazer
 	else
 	{
 		// Injeta os marcadores de fim de mensagem

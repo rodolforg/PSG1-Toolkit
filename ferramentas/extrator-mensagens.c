@@ -156,16 +156,23 @@ int main(int argc, char*argv[])
 	off_t ptr_atual = 0;
 	off_t ptr_anterior = -1;
 	off_t ptr_demarcador = -1;
-	// Busca pelo próximo separador de mensagens: 0x25 0x5C
+	// Busca pelo próximo separador de mensagens: 0x25 0x5C ou 0x25 0x2A
 	int achou_separador_msg;
+	int achou_separador_msg_sim_nao;
 	while (1)
 	{
 		achou_separador_msg = 0;
+		achou_separador_msg_sim_nao = 0;
 		while ( ptr_atual + 1 < tamanho_arquivo)
 		{
 			if (buffer_arquivo[ptr_atual] == 0x25 && buffer_arquivo[ptr_atual+1] == 0x5C)
 			{
 				achou_separador_msg = 1;
+				break;
+			}
+			if (buffer_arquivo[ptr_atual] == 0x25 && buffer_arquivo[ptr_atual+1] == 0x2A)
+			{
+				achou_separador_msg_sim_nao = 1;
 				break;
 			}
 			// FIXME: Não é só 0x32 0x00 0x00 0x00 ...  0x00 0x00 0x00 0x00 também apareceu!
@@ -212,10 +219,20 @@ int main(int argc, char*argv[])
 		// TODO: Garantir que é só texto SHIFT-JIS por meio do Iconv
 
 		// Grava o texto:
-		buffer_arquivo[ptr_atual] = 0;
+		if (!achou_separador_msg_sim_nao)
+			buffer_arquivo[ptr_atual] = 0;
+		else
+		{
+			achou_separador_msg_sim_nao = buffer_arquivo[ptr_atual+2];
+			buffer_arquivo[ptr_atual+2] = 0;
+		}
 		fprintf(arq, "--- %08X ---\n", ptr_anterior);
 		fprintf(arq, "%s\n", buffer_arquivo + ptr_anterior);
 
+		if (achou_separador_msg_sim_nao)
+		{
+			buffer_arquivo[ptr_atual+2] = achou_separador_msg_sim_nao;
+		}
 		ptr_anterior = ptr_atual + 2;
 		ptr_atual ++;
 	}
