@@ -204,6 +204,7 @@ int carrega_mensagens(const char *nomeArquivo, Mensagem **mensagens)
 		// Não há BOM, voltar ao começo.
 		fseek(arquivo, 0 , SEEK_SET);
 	}
+	int houve_quebra_linha = 0;
 	// Busca linhas
 	while (!feof(arquivo))
 	{
@@ -218,17 +219,21 @@ int carrega_mensagens(const char *nomeArquivo, Mensagem **mensagens)
 		}
 		
 		int comprimento_linha = strlen(linha);
+		
+		int ha_quebra_linha = 0;
 
 		// Remove a quebra de linha do fgets
 		if (linha[comprimento_linha -1] == 0x0A)
 		{
 			linha[comprimento_linha -1] = 0x00;
 			comprimento_linha--;
+			ha_quebra_linha = 1;
 		}
 		if (linha[comprimento_linha -1] == 0x0D)
 		{
 			linha[comprimento_linha -1] = 0x00;
 			comprimento_linha--;
+			ha_quebra_linha = 1;
 		}
 
 		
@@ -256,12 +261,12 @@ int carrega_mensagens(const char *nomeArquivo, Mensagem **mensagens)
 			}
 			mensagem = tmp;
 			// Anexa quebra de linha (@) se a mensagem anterior não continha
-			if (comprimento_mensagem >= 1 && mensagem[comprimento_mensagem-1] != '@')
+			if (houve_quebra_linha && comprimento_mensagem >= 1 && mensagem[comprimento_mensagem-1] != '@')
 			{
 				mensagem[comprimento_mensagem] = '@';
 				comprimento_mensagem++;
 			}
-			if (comprimento_mensagem >= 2 && mensagem[comprimento_mensagem-1] == '@' && mensagem[comprimento_mensagem-2] & 0x80)
+			if (houve_quebra_linha && comprimento_mensagem >= 2 && mensagem[comprimento_mensagem-1] == '@' && mensagem[comprimento_mensagem-2] & 0x80)
 			{
 				mensagem[comprimento_mensagem] = '@';
 				comprimento_mensagem++;
@@ -270,6 +275,7 @@ int carrega_mensagens(const char *nomeArquivo, Mensagem **mensagens)
 			memcpy(mensagem + comprimento_mensagem, linha, comprimento_linha);
 			mensagem[comprimento_mensagem+comprimento_linha] = 0;
 			(*mensagens)[qtdMensagens-1].texto = mensagem;
+			houve_quebra_linha = ha_quebra_linha;
 
 			leu_mensagem = 1;
 		}
@@ -288,6 +294,7 @@ int carrega_mensagens(const char *nomeArquivo, Mensagem **mensagens)
 			
 			leu_endereco = 1;
 			leu_mensagem = 0;
+			houve_quebra_linha = 0;
 
 			// Reserva espaço para novas mensagens
 			Mensagem *temp = realloc(*mensagens, (qtdMensagens+1)*sizeof(Mensagem));
